@@ -3,57 +3,107 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>LCS test card generator</title>
+<title>LCS test card and payslip generator</title>
 <style>
   * { box-sizing: border-box; }
   body { margin: 0; font: 15px/1.45 system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background: #f3f5f8; color: #1d2733; }
-  main { max-width: 980px; margin: 24px auto; padding: 0 16px; display: grid; grid-template-columns: 320px 1fr; gap: 20px; }
-  @media (max-width: 820px) { main { grid-template-columns: 1fr; } }
-  h1 { font-size: 20px; margin: 24px auto 0; max-width: 980px; padding: 0 16px; }
-  .sub { max-width: 980px; margin: 4px auto 0; padding: 0 16px; color: #5b6678; font-size: 14px; }
+  header { max-width: 1180px; margin: 20px auto 0; padding: 0 16px; }
+  h1 { font-size: 20px; margin: 0; }
+  .sub { color: #5b6678; font-size: 14px; margin: 4px 0 0; }
+  main { max-width: 1180px; margin: 16px auto 32px; padding: 0 16px; display: grid; grid-template-columns: 340px 1fr; gap: 20px; }
+  @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
   .panel { background: #fff; border: 1px solid #dde3ea; border-radius: 12px; padding: 16px; }
-  label { display: block; font-size: 13px; color: #5b6678; margin: 12px 0 4px; }
-  input[type=text], textarea, select { width: 100%; padding: 9px 11px; border: 1px solid #cfd7e1; border-radius: 8px; font: inherit; }
+  .panel h2 { font-size: 14px; text-transform: uppercase; letter-spacing: .04em; color: #5b6678; margin: 18px 0 4px; }
+  .panel h2:first-child { margin-top: 0; }
+  label { display: block; font-size: 13px; color: #5b6678; margin: 10px 0 4px; }
+  input[type=text], input[type=number], input[type=month], textarea, select { width: 100%; padding: 8px 10px; border: 1px solid #cfd7e1; border-radius: 8px; font: inherit; }
   textarea { resize: vertical; }
-  .row { display: flex; gap: 10px; align-items: center; margin-top: 12px; font-size: 14px; }
-  .err { color: #b42318; font-size: 13px; min-height: 18px; margin-top: 4px; }
-  .btns { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
-  button { border: 0; border-radius: 8px; padding: 10px 14px; font: inherit; font-weight: 600; cursor: pointer; background: #1d4ed8; color: #fff; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .row { display: flex; gap: 8px; align-items: center; margin-top: 10px; font-size: 14px; }
+  .err { color: #b42318; font-size: 13px; min-height: 16px; margin-top: 4px; }
+  .tabs { display: flex; gap: 6px; margin-bottom: 12px; }
+  .tabs button { background: #e8eefc; color: #1d4ed8; }
+  .tabs button.on { background: #1d4ed8; color: #fff; }
+  .btns { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  button { border: 0; border-radius: 8px; padding: 9px 13px; font: inherit; font-weight: 600; cursor: pointer; background: #1d4ed8; color: #fff; }
   button.alt { background: #e8eefc; color: #1d4ed8; }
-  canvas { width: 100%; height: auto; border-radius: 12px; box-shadow: 0 4px 18px rgba(0,0,0,.12); background: #fff; }
+  .view canvas { width: 100%; height: auto; border-radius: 10px; box-shadow: 0 4px 18px rgba(0,0,0,.12); background: #fff; display: block; }
   .note { font-size: 12px; color: #6b7280; margin-top: 10px; }
+  .hide { display: none !important; }
+  .lines .line { display: grid; grid-template-columns: 1fr 110px 28px; gap: 6px; margin-top: 6px; }
+  .lines .line button { padding: 0; background: #fee2e2; color: #b42318; }
+  .small { font-size: 12px; padding: 6px 10px; }
 </style>
 </head>
 <body>
-<h1>LCS test card generator</h1>
-<p class="sub">Makes a plainly marked test card (not an identity document) with a name and IC number, for testing the camera step, OCR and auto-fill.</p>
+<header>
+  <h1>LCS test card and payslip generator</h1>
+  <p class="sub">Plainly marked test documents (not real identity documents or payslips) for testing the camera step, OCR and auto-fill.</p>
+</header>
 <main>
-  <form class="panel" id="f" autocomplete="off">
+  <form class="panel" id="f" autocomplete="off" onsubmit="return false">
+    <h2>Person</h2>
     <label for="name">Name</label>
     <input id="name" type="text" value="ALI BIN ABU" maxlength="60">
     <label for="ic">IC number (YYMMDD-PB-####)</label>
     <input id="ic" type="text" value="880808-13-4101" maxlength="14" inputmode="numeric">
     <div class="err" id="icErr"></div>
-    <label for="addr">Address (optional)</label>
-    <textarea id="addr" rows="3">12 JALAN CONTOH 1
+    <button type="button" id="rand" class="alt small">Random person</button>
+
+    <div class="tabs" style="margin-top:16px">
+      <button type="button" id="tabCard" class="on">Test card</button>
+      <button type="button" id="tabSlip">Test payslip</button>
+    </div>
+
+    <div id="cardForm">
+      <label for="addr">Address (optional)</label>
+      <textarea id="addr" rows="3">12 JALAN CONTOH 1
 47100 PUCHONG
 SELANGOR</textarea>
-    <label for="side">Side</label>
-    <select id="side"><option value="front">Front</option><option value="back">Back</option></select>
+      <label for="side">Side</label>
+      <select id="side"><option value="front">Front</option><option value="back">Back</option></select>
+    </div>
+
+    <div id="slipForm" class="hide">
+      <label for="company">Company</label>
+      <input id="company" type="text" value="Sample Test Company Sdn Bhd" maxlength="60">
+      <div class="two">
+        <div><label for="month">Pay month</label><input id="month" type="month"></div>
+        <div><label for="empNo">Employee no.</label><input id="empNo" type="text" value="EMP001" maxlength="12"></div>
+      </div>
+      <div class="two">
+        <div><label for="dept">Department</label><input id="dept" type="text" value="OPERATIONS" maxlength="20"></div>
+        <div><label for="pos">Position</label><input id="pos" type="text" value="Sales Executive" maxlength="24"></div>
+      </div>
+      <label for="basic">Basic pay (RM)</label>
+      <input id="basic" type="number" min="0" step="0.01" value="3000">
+      <label>Other earnings (RM)</label>
+      <div class="lines" id="earnLines"></div>
+      <button type="button" id="addEarn" class="alt small" style="margin-top:6px">+ Earning</button>
+      <label>Other deductions (RM)</label>
+      <div class="lines" id="dedLines"></div>
+      <button type="button" id="addDed" class="alt small" style="margin-top:6px">+ Deduction</button>
+      <div class="row"><input id="pcbOn" type="checkbox" checked><label for="pcbOn" style="margin:0">Include income tax (PCB)</label></div>
+      <p class="note">EPF (11%), SOCSO, EIS and PCB are estimated for test data only; they are not exact statutory figures.</p>
+    </div>
+
     <div class="row"><input id="photo" type="checkbox"><label for="photo" style="margin:0">Look like a phone photo (tilt, background, shadow)</label></div>
     <div class="btns">
       <button type="button" id="dlPng">Download PNG</button>
       <button type="button" id="dlJpg" class="alt">Download JPG</button>
-      <button type="button" id="rand" class="alt">Random details</button>
+      <button type="button" id="dl3" class="alt hide">Download latest 3 months</button>
     </div>
-    <p class="note">Downloads work when this file is opened in your browser (double-click it). Every card carries "TEST CARD – NOT AN IDENTITY DOCUMENT".</p>
+    <p class="note">Downloads work when this file is opened in your browser (double-click it). Every document carries a "TEST" marking.</p>
   </form>
-  <div><canvas id="c" width="1012" height="638" aria-label="Test card preview"></canvas></div>
+  <div class="view"><canvas id="c" width="1012" height="638" aria-label="Preview"></canvas></div>
 </main>
 <script>
 const $ = (id) => document.getElementById(id);
-const W = 1012, H = 638; // credit-card ratio (85.6 × 54 mm)
+let mode = 'card';
+const CW = 1012, CH = 638;   // card: credit-card ratio
+const SW = 1400, SH = 920;   // payslip
 
+// ---------- shared helpers
 function formatIc(v) {
   const d = v.replace(/\D/g, '').slice(0, 12);
   return d.length > 8 ? `${d.slice(0, 6)}-${d.slice(6, 8)}-${d.slice(8)}` : d.length > 6 ? `${d.slice(0, 6)}-${d.slice(6)}` : d;
@@ -64,47 +114,48 @@ function icProblem(ic) {
   if (mm < 1 || mm > 12 || dd < 1 || dd > 31) return 'The first 6 digits must be a date (YYMMDD).';
   return '';
 }
-function genderOf(ic) { return +ic.slice(-1) % 2 ? 'MALE' : 'FEMALE'; }
+const genderOf = (ic) => (+ic.slice(-1) % 2 ? 'MALE' : 'FEMALE');
 function dobOf(ic) {
   const yy = +ic.slice(0, 2), now = new Date().getFullYear() % 100;
   return `${ic.slice(4, 6)}/${ic.slice(2, 4)}/${(yy > now ? 1900 : 2000) + yy}`;
 }
-
 function roundRect(g, x, y, w, h, r) {
   g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r);
   g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath();
 }
+function label(g, t, x, y) { g.save(); g.fillStyle = '#6b7685'; g.font = '700 17px Arial, sans-serif'; g.fillText(t, x, y); g.restore(); }
+function wrap(g, text, max) {
+  const words = text.split(/\s+/), lines = []; let cur = '';
+  for (const w of words) { const t = cur ? cur + ' ' + w : w; if (g.measureText(t).width > max && cur) { lines.push(cur); cur = w; } else cur = t; }
+  if (cur) lines.push(cur); return lines.slice(0, 2);
+}
+const money = (n) => (Math.round(n * 100) / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const MONTHS = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'];
 
-/** the card itself, drawn on a W×H canvas */
+// ---------- the test card
 function drawCard(g, d) {
   g.save();
-  roundRect(g, 0, 0, W, H, 34); g.clip();
-  g.fillStyle = '#fafbfc'; g.fillRect(0, 0, W, H);
-  // light grid so it is clearly a printed test sheet
+  roundRect(g, 0, 0, CW, CH, 34); g.clip();
+  g.fillStyle = '#fafbfc'; g.fillRect(0, 0, CW, CH);
   g.strokeStyle = '#eef1f5'; g.lineWidth = 1;
-  for (let x = 0; x < W; x += 28) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, H); g.stroke(); }
-  for (let y = 0; y < H; y += 28) { g.beginPath(); g.moveTo(0, y); g.lineTo(W, y); g.stroke(); }
-  // top band
-  g.fillStyle = '#2f3b4c'; g.fillRect(0, 0, W, 86);
+  for (let x = 0; x < CW; x += 28) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, CH); g.stroke(); }
+  for (let y = 0; y < CH; y += 28) { g.beginPath(); g.moveTo(0, y); g.lineTo(CW, y); g.stroke(); }
+  g.fillStyle = '#2f3b4c'; g.fillRect(0, 0, CW, 86);
   g.fillStyle = '#fff'; g.font = '700 34px Arial, sans-serif'; g.textBaseline = 'middle';
   g.fillText('TEST CARD', 36, 43);
-  g.font = '600 20px Arial, sans-serif'; g.textAlign = 'right';
-  g.fillText('NOT AN IDENTITY DOCUMENT', W - 36, 43); g.textAlign = 'left';
-
+  g.font = '600 20px Arial, sans-serif'; g.textAlign = 'right'; g.fillText('NOT AN IDENTITY DOCUMENT', CW - 36, 43); g.textAlign = 'left';
   g.fillStyle = '#1d2733'; g.textBaseline = 'alphabetic';
   if (d.side === 'front') {
-    // IC number, large: what the agent looks for first
     label(g, 'IC NUMBER', 36, 140);
     g.font = '700 50px "Courier New", monospace'; g.fillText(d.ic, 36, 192);
     label(g, 'NAME', 36, 262);
     g.font = '700 34px Arial, sans-serif';
-    wrap(g, d.name.toUpperCase(), 36, 302, 600, 40).forEach((l, i) => g.fillText(l, 36, 302 + i * 40));
+    wrap(g, d.name.toUpperCase(), 600).forEach((l, i) => g.fillText(l, 36, 302 + i * 40));
     if (d.addr.trim()) {
       label(g, 'ADDRESS', 36, 420);
       g.font = '600 26px Arial, sans-serif';
       d.addr.toUpperCase().split(/\n/).slice(0, 4).forEach((l, i) => g.fillText(l.trim(), 36, 456 + i * 32));
     }
-    // placeholder face (not a photo)
     g.fillStyle = '#e3e8ef'; roundRect(g, 700, 120, 270, 330, 18); g.fill();
     g.fillStyle = '#b8c2cf';
     g.beginPath(); g.arc(835, 245, 70, 0, Math.PI * 2); g.fill();
@@ -117,64 +168,192 @@ function drawCard(g, d) {
     g.font = '700 44px "Courier New", monospace'; g.fillText(d.ic, 36, 188);
     label(g, 'DATE OF BIRTH', 36, 256);
     g.font = '700 30px Arial, sans-serif'; g.fillText(dobOf(d.ic), 36, 294);
-    label(g, 'GENDER', 360, 256);
-    g.fillText(genderOf(d.ic), 360, 294);
-    // a fake barcode-like strip, clearly decorative
+    label(g, 'GENDER', 360, 256); g.fillText(genderOf(d.ic), 360, 294);
     g.fillStyle = '#1d2733';
     let x = 36, seed = [...d.ic].reduce((s, ch) => s * 31 + ch.charCodeAt(0), 7);
     while (x < 640) { seed = (seed * 1103515245 + 12345) % 2147483648; const w = 2 + (seed % 5); g.fillRect(x, 360, w, 110); x += w + 2 + ((seed >> 3) % 4); }
     g.font = '600 18px Arial, sans-serif'; g.fillStyle = '#6b7685'; g.fillText('DECORATIVE PATTERN – NOT A BARCODE', 36, 500);
   }
-  // diagonal watermark
-  g.save(); g.translate(W / 2, H / 2 + 20); g.rotate(-0.32);
+  g.save(); g.translate(CW / 2, CH / 2 + 20); g.rotate(-0.32);
   g.fillStyle = 'rgba(200, 40, 40, 0.16)'; g.font = '800 92px Arial, sans-serif'; g.textAlign = 'center';
   g.fillText('TEST ONLY', 0, 0);
   g.font = '700 30px Arial, sans-serif'; g.fillText('NOT VALID FOR ANY PURPOSE', 0, 52);
   g.restore();
-  // footer
-  g.fillStyle = '#2f3b4c'; g.fillRect(0, H - 44, W, 44);
+  g.fillStyle = '#2f3b4c'; g.fillRect(0, CH - 44, CW, 44);
   g.fillStyle = '#fff'; g.font = '600 17px Arial, sans-serif'; g.textBaseline = 'middle';
-  g.fillText('LCS SOFTWARE TESTING · SAMPLE DATA', 36, H - 22);
+  g.fillText('LCS SOFTWARE TESTING · SAMPLE DATA', 36, CH - 22);
   g.restore();
-  g.strokeStyle = '#c9d1dc'; g.lineWidth = 3; roundRect(g, 1.5, 1.5, W - 3, H - 3, 34); g.stroke();
-}
-function label(g, t, x, y) { g.save(); g.fillStyle = '#6b7685'; g.font = '700 17px Arial, sans-serif'; g.fillText(t, x, y); g.restore(); }
-function wrap(g, text, x, y, max) {
-  const words = text.split(/\s+/), lines = []; let cur = '';
-  for (const w of words) { const t = cur ? cur + ' ' + w : w; if (g.measureText(t).width > max && cur) { lines.push(cur); cur = w; } else cur = t; }
-  if (cur) lines.push(cur); return lines.slice(0, 2);
+  g.strokeStyle = '#c9d1dc'; g.lineWidth = 3; roundRect(g, 1.5, 1.5, CW - 3, CH - 3, 34); g.stroke();
 }
 
-function render() {
-  const ic = $('ic').value, problem = icProblem(ic);
-  $('icErr').textContent = problem;
-  const d = { name: $('name').value.trim() || 'NAME', ic: problem ? '000000-00-0000' : ic, addr: $('addr').value, side: $('side').value };
-  const out = $('c'), g = out.getContext('2d');
-  if (!$('photo').checked) {
-    out.width = W; out.height = H; g.clearRect(0, 0, W, H); drawCard(g, d); return;
+// ---------- the test payslip
+const earnings = [{ name: 'FIXED ALLOWANCE', amount: 300 }, { name: 'MEAL', amount: 93 }];
+const deductions = [];
+
+/** rough test figures: EPF 11% of wages, SOCSO and EIS on wages up to RM6,000, PCB a simple estimate */
+function compute(basic, extra, otherDed, pcbOn) {
+  const gross = basic + extra.reduce((s, e) => s + e.amount, 0);
+  const wage = Math.min(gross, 6000);
+  const epf = Math.ceil(gross * 0.11);
+  const socso = Math.round(wage * 0.005 * 100) / 100;
+  const eis = Math.round(wage * 0.002 * 100) / 100;
+  const annual = (gross - epf) * 12 - 9000 - 4000; // after self relief and EPF relief (estimate)
+  let tax = 0;
+  for (const [upTo, rate, base] of [[5000, 0, 0], [20000, 0.01, 0], [35000, 0.03, 150], [50000, 0.06, 600], [70000, 0.11, 1500], [100000, 0.19, 3700], [Infinity, 0.25, 9400]]) {
+    const prev = { 5000: 0, 20000: 5000, 35000: 20000, 50000: 35000, 70000: 50000, 100000: 70000, Infinity: 100000 }[upTo];
+    if (annual <= upTo) { tax = annual > 5000 ? base + (annual - prev) * rate : 0; break; }
   }
-  // "phone photo": the card slightly tilted on a desk, with a shadow and a little noise
-  const card = document.createElement('canvas'); card.width = W; card.height = H; drawCard(card.getContext('2d'), d);
-  out.width = 1280; out.height = 960;
-  const bg = g.createLinearGradient(0, 0, 1280, 960); bg.addColorStop(0, '#3b3f46'); bg.addColorStop(1, '#22252a');
-  g.fillStyle = bg; g.fillRect(0, 0, 1280, 960);
-  g.save(); g.translate(640, 490); g.rotate(-0.045);
+  const pcb = pcbOn ? Math.max(0, Math.round((tax / 12) * 100) / 100) : 0;
+  const ded = [['EMPLOYEE EPF', epf], ['EMPLOYEE SOCSO', socso], ['EMPLOYEE EIS', eis], ...(pcbOn ? [['EMPLOYEE PCB', pcb]] : []),
+    ...otherDed.map((d) => [d.name.toUpperCase(), d.amount])];
+  const totalDed = ded.reduce((s, [, v]) => s + v, 0);
+  return { gross, ded, totalDed, net: gross - totalDed, erEpf: Math.ceil(gross * (gross > 5000 ? 0.12 : 0.13)), erSocso: Math.round(wage * 0.0175 * 100) / 100, erEis: eis };
+}
+
+function drawSlip(g, d) {
+  g.fillStyle = '#fff'; g.fillRect(0, 0, SW, SH);
+  const L = 70, R = SW - 70, M = 740;
+  g.strokeStyle = '#111'; g.lineWidth = 2; g.fillStyle = '#111';
+  const text = (t, x, y, font = '22px Arial', align = 'left') => { g.font = font; g.textAlign = align; g.fillText(t, x, y); g.textAlign = 'left'; };
+  const box = (x, y, w, h) => g.strokeRect(x, y, w, h);
+  // test banner
+  g.fillStyle = '#b42318'; g.fillRect(L, 14, R - L, 30);
+  g.fillStyle = '#fff'; text('TEST PAYSLIP – SAMPLE DATA FOR SOFTWARE TESTING – NOT A REAL PAYSLIP', SW / 2, 36, '700 18px Arial', 'center');
+  g.fillStyle = '#111';
+  // header
+  box(L, 52, R - L, 46);
+  text(d.company, L + 12, 85, '28px Arial');
+  text(`END PAYMENT - ${MONTHS[d.m]} ${d.y}`, R - 14, 84, '700 22px Arial', 'right');
+  // employee details
+  box(L, 98, R - L, 168);
+  const info = [['EMPLOYEE NO.', d.empNo], ['NAME', d.name.toUpperCase()], ['IC NO.', d.ic], ['DEPARTMENT', d.dept.toUpperCase()], ['BASE RATE', money(d.basic)], ['WORKING DAYS', String(d.days) + '.00']];
+  info.forEach(([k, v], i) => { text(k, L + 12, 126 + i * 26, '20px Arial'); text(v, L + 240, 126 + i * 26, '20px Arial'); });
+  const right = [['POSITION', d.pos], ['EPF NO.', d.epfNo], ['SOCSO NO.', d.socsoNo], ['TAX NO.', d.taxNo]];
+  right.forEach(([k, v], i) => { text(k, 1010, 126 + i * 26, '20px Arial'); text(v, 1150, 126 + i * 26, '20px Arial'); });
+  // earnings and deductions
+  const top = 266, rows = Math.max(d.earn.length + 1, d.c.ded.length) ;
+  const bodyH = Math.max(270, 40 + rows * 26 + 20);
+  box(L, top, M - L, 40); box(M, top, R - M, 40);
+  text('EARNINGS / INCOME', L + 12, top + 27, '20px Arial'); text('DEDUCTION', M + 12, top + 27, '20px Arial');
+  box(L, top + 40, M - L, bodyH); box(M, top + 40, R - M, bodyH);
+  [['BASIC PAY', d.basic], ...d.earn.map((e) => [e.name.toUpperCase(), e.amount])].forEach(([k, v], i) => {
+    text(k, L + 10, top + 72 + i * 26, '20px Arial'); text(money(v), M - 12, top + 72 + i * 26, '20px Arial', 'right');
+  });
+  d.c.ded.forEach(([k, v], i) => { text(k, M + 12, top + 72 + i * 26, '20px Arial'); text(money(v), R - 12, top + 72 + i * 26, '20px Arial', 'right'); });
+  const tot = top + 40 + bodyH;
+  box(L, tot, M - L, 36); box(M, tot, R - M, 36); box(M, tot + 36, R - M, 36);
+  text('GROSS PAY', L + 18, tot + 25, '20px Arial'); text(money(d.c.gross), M - 12, tot + 25, '20px Arial', 'right');
+  text('TOTAL DEDUCTION', M + 12, tot + 25, '20px Arial'); text(money(d.c.totalDed), R - 12, tot + 25, '20px Arial', 'right');
+  text('NET PAY', M + 12, tot + 61, '20px Arial'); text(money(d.c.net), R - 12, tot + 61, '20px Arial', 'right');
+  // employer contributions
+  const er = tot + 86;
+  box(L, er, 210, 96); box(L + 210, er, 210, 96);
+  [['EPF (E\'YER)', d.c.erEpf], ['SOCSO (E\'YER)', d.c.erSocso], ['EIS (E\'YER)', d.c.erEis]].forEach(([k, v], i) => {
+    text(k, L + 12, er + 28 + i * 27, '20px Arial'); text(money(v), L + 410, er + 28 + i * 27, '20px Arial', 'right');
+  });
+  text('APPROVED BY :', L + 18, er + 160, '20px Arial'); text('RECEIVED BY :', M + 10, er + 160, '20px Arial');
+  // watermark, light enough for OCR to read through
+  g.save(); g.translate(SW / 2, SH / 2 + 40); g.rotate(-0.28);
+  g.fillStyle = 'rgba(200, 40, 40, 0.10)'; g.font = '800 120px Arial'; g.textAlign = 'center';
+  g.fillText('TEST ONLY', 0, 0); g.font = '700 36px Arial'; g.fillText('SAMPLE DATA · NOT A REAL PAYSLIP', 0, 60);
+  g.restore();
+}
+
+// ---------- the person's payslip details for one month
+function slipData(y, m) {
+  const ic = $('ic').value;
+  const seed = [...ic].reduce((s, ch) => (s * 31 + ch.charCodeAt(0)) % 1e9, 11);
+  const basic = Math.max(0, +$('basic').value || 0);
+  const earn = earnings.filter((e) => e.name.trim()).map((e) => ({ name: e.name.trim(), amount: +e.amount || 0 }));
+  const ded = deductions.filter((e) => e.name.trim()).map((e) => ({ name: e.name.trim(), amount: +e.amount || 0 }));
+  return {
+    company: $('company').value.trim() || 'Sample Test Company Sdn Bhd', y, m, ic, name: $('name').value.trim() || 'NAME',
+    empNo: $('empNo').value.trim(), dept: $('dept').value.trim(), pos: $('pos').value.trim(), basic, earn,
+    days: new Date(y, m + 1, 0).getDate(),
+    epfNo: String(10000000 + (seed % 89999999)), socsoNo: ic.replace(/-/g, ''), taxNo: 'SG ' + String(1000000000 + (seed % 899999999)),
+    c: compute(basic, earn, ded, $('pcbOn').checked),
+  };
+}
+
+// ---------- drawing to the preview, optionally as a phone photo
+function asPhoto(src, out, w, h) {
+  const PW = Math.round(w * 1.27), PH = Math.round(h * 1.4);
+  out.width = PW; out.height = PH;
+  const g = out.getContext('2d');
+  const bg = g.createLinearGradient(0, 0, PW, PH); bg.addColorStop(0, '#3b3f46'); bg.addColorStop(1, '#22252a');
+  g.fillStyle = bg; g.fillRect(0, 0, PW, PH);
+  g.save(); g.translate(PW / 2, PH / 2 + 10); g.rotate(-0.04);
   g.shadowColor = 'rgba(0,0,0,.55)'; g.shadowBlur = 40; g.shadowOffsetY = 18;
-  g.drawImage(card, -W / 2, -H / 2); g.restore();
-  const img = g.getImageData(0, 0, 1280, 960), p = img.data;
+  g.drawImage(src, -w / 2, -h / 2); g.restore();
+  const img = g.getImageData(0, 0, PW, PH), p = img.data;
   for (let i = 0; i < p.length; i += 4) { const n = (Math.random() - 0.5) * 14; p[i] += n; p[i + 1] += n; p[i + 2] += n; }
   g.putImageData(img, 0, 0);
-  const glare = g.createRadialGradient(420, 300, 10, 420, 300, 420); glare.addColorStop(0, 'rgba(255,255,255,.18)'); glare.addColorStop(1, 'rgba(255,255,255,0)');
-  g.fillStyle = glare; g.fillRect(0, 0, 1280, 960);
+  const glare = g.createRadialGradient(PW * 0.33, PH * 0.3, 10, PW * 0.33, PH * 0.3, PW * 0.35);
+  glare.addColorStop(0, 'rgba(255,255,255,.16)'); glare.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = glare; g.fillRect(0, 0, PW, PH);
+}
+function paint(out, y, m) {
+  const plain = document.createElement('canvas');
+  let w, h;
+  if (mode === 'card') {
+    w = CW; h = CH; plain.width = w; plain.height = h;
+    const ic = $('ic').value;
+    drawCard(plain.getContext('2d'), { name: $('name').value.trim() || 'NAME', ic: icProblem(ic) ? '000000-00-0000' : ic, addr: $('addr').value, side: $('side').value });
+  } else {
+    w = SW; h = SH; plain.width = w; plain.height = h;
+    drawSlip(plain.getContext('2d'), slipData(y, m));
+  }
+  if ($('photo').checked) asPhoto(plain, out, w, h);
+  else { out.width = w; out.height = h; out.getContext('2d').drawImage(plain, 0, 0); }
+}
+function selectedMonth() {
+  const [y, m] = ($('month').value || '').split('-').map(Number);
+  return y ? [y, m - 1] : [new Date().getFullYear(), new Date().getMonth()];
+}
+function render() {
+  $('icErr').textContent = icProblem($('ic').value);
+  paint($('c'), ...selectedMonth());
 }
 
+// ---------- downloads
+function save(canvas, name, type) {
+  const a = document.createElement('a');
+  a.download = `${name}.${type === 'image/png' ? 'png' : 'jpg'}`;
+  a.href = canvas.toDataURL(type, 0.92);
+  document.body.appendChild(a); a.click(); a.remove();
+}
+function fileName(y, m) {
+  return mode === 'card' ? `test-card-${$('ic').value}-${$('side').value}` : `test-payslip-${$('ic').value}-${y}-${String(m + 1).padStart(2, '0')}`;
+}
 function download(type) {
   if (icProblem($('ic').value)) return;
-  const a = document.createElement('a');
-  const base = `test-card-${$('ic').value}-${$('side').value}`;
-  a.download = `${base}.${type === 'image/png' ? 'png' : 'jpg'}`;
-  a.href = $('c').toDataURL(type, 0.92);
-  document.body.appendChild(a); a.click(); a.remove();
+  const [y, m] = selectedMonth();
+  save($('c'), fileName(y, m), type);
+}
+async function downloadThree() {
+  if (icProblem($('ic').value)) return;
+  const [y, m] = selectedMonth();
+  for (let i = 0; i < 3; i++) {
+    const d = new Date(y, m - i, 1), c = document.createElement('canvas');
+    paint(c, d.getFullYear(), d.getMonth());
+    save(c, fileName(d.getFullYear(), d.getMonth()), 'image/jpeg');
+    await new Promise((r) => setTimeout(r, 400)); // browsers allow a burst of downloads only with a short gap
+  }
+}
+
+// ---------- editable earning and deduction lines
+function lines(host, list) {
+  host.innerHTML = '';
+  list.forEach((it, i) => {
+    const row = document.createElement('div'); row.className = 'line';
+    const n = document.createElement('input'); n.type = 'text'; n.value = it.name; n.placeholder = 'Name'; n.maxLength = 28;
+    const a = document.createElement('input'); a.type = 'number'; a.step = '0.01'; a.min = '0'; a.value = it.amount;
+    const x = document.createElement('button'); x.type = 'button'; x.textContent = '×'; x.title = 'Remove';
+    n.oninput = () => { it.name = n.value; render(); };
+    a.oninput = () => { it.amount = +a.value || 0; render(); };
+    x.onclick = () => { list.splice(i, 1); lines(host, list); render(); };
+    row.append(n, a, x); host.append(row);
+  });
 }
 
 const NAMES = ['ALI BIN ABU', 'SITI NUR AISYAH BINTI AHMAD', 'TAN WEI MING', 'KUMARAN A/L RAJU', 'NURUL IZZAH BINTI HASSAN', 'LIM MEI LING', 'MOHD FAIZAL BIN ISMAIL'];
@@ -184,16 +363,32 @@ function random() {
   const tail = String(Math.floor(Math.random() * 10000)).padStart(4, '0');
   $('name').value = NAMES[Math.floor(Math.random() * NAMES.length)];
   $('ic').value = `${String(y).padStart(2, '0')}${String(m).padStart(2, '0')}${String(d).padStart(2, '0')}-${pb}-${tail}`;
+  $('basic').value = String(2000 + Math.round(Math.random() * 60) * 100);
+  render();
+}
+function setMode(m) {
+  mode = m;
+  $('tabCard').classList.toggle('on', m === 'card'); $('tabSlip').classList.toggle('on', m === 'slip');
+  $('cardForm').classList.toggle('hide', m !== 'card'); $('slipForm').classList.toggle('hide', m !== 'slip');
+  $('dl3').classList.toggle('hide', m !== 'slip');
   render();
 }
 
+const now = new Date(); now.setMonth(now.getMonth() - 1);
+$('month').value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 $('ic').addEventListener('input', (e) => { e.target.value = formatIc(e.target.value); render(); });
-['name', 'addr', 'side', 'photo'].forEach((id) => $(id).addEventListener('input', render));
-$('side').addEventListener('change', render);
-$('dlPng').addEventListener('click', () => download('image/png'));
-$('dlJpg').addEventListener('click', () => download('image/jpeg'));
-$('rand').addEventListener('click', random);
-$('f').addEventListener('submit', (e) => e.preventDefault());
+['name', 'addr', 'side', 'photo', 'company', 'month', 'empNo', 'dept', 'pos', 'basic', 'pcbOn'].forEach((id) => {
+  $(id).addEventListener('input', render); $(id).addEventListener('change', render);
+});
+$('addEarn').onclick = () => { earnings.push({ name: '', amount: 0 }); lines($('earnLines'), earnings); };
+$('addDed').onclick = () => { deductions.push({ name: '', amount: 0 }); lines($('dedLines'), deductions); };
+$('tabCard').onclick = () => setMode('card');
+$('tabSlip').onclick = () => setMode('slip');
+$('dlPng').onclick = () => download('image/png');
+$('dlJpg').onclick = () => download('image/jpeg');
+$('dl3').onclick = downloadThree;
+$('rand').onclick = random;
+lines($('earnLines'), earnings); lines($('dedLines'), deductions);
 render();
 </script>
 </body>
